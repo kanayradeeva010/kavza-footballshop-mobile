@@ -91,3 +91,135 @@ jadi context dikirim oleh Flutter otomatis saat dipangggil build() melalui conte
  Jelaskan konsep "hot reload" di Flutter dan bagaimana bedanya dengan "hot restart".
  Jawab:
  Jadii hot reload adalah fitur di Flutter yang memungkinkan perubahan kode ditampilkan langsung di aplikasi tanpa kehilangan state yang sedang berjalan. Dengan ini, Flutter hanya memuat ulang bagian kode yang berubah aja tidak menghentikan aplikasi atau mengilang proses dari awal. Bedanya dengan hot restart adalah hot restart juga memperbarui kode yang diubah tapi seluruh staate aplikasi direset ke kondisi awal, jadi seolah olah aplikasinya baru dijalankan dari awal dan membangun ulang semua widget dari root main() sehingga variabel, input, dan data sementara ilang.  
+
+## Tugas Individu 8
+## Kanayra Maritza Sanika Adeeva
+## PBP C - 2406437880
+ Menjawab beberapa pertanyaan berikut pada README.md pada root folder (silakan modifikasi README.md yang telah kamu buat sebelumnya dan tambahkan subjudul untuk setiap tugas):
+
+ Jelaskan perbedaan antara Navigator.push() dan Navigator.pushReplacement() pada Flutter. Dalam kasus apa sebaiknya masing-masing digunakan pada aplikasi Football Shop kamu?
+ Jawab: 
+ Navigator.push menambah halaman baru ke atas stack navigasi, namun kalau Navigator.pushReplacement mengganti halaman saat ini dengan halaman yang baru. Pada navigator push halaman sebelumnya tetap tersimpan di dalam stack, sehingga pengguna dapat kembali ke halaman sebelumnya dengan tombol back, namun pada navigator push replacement halaman sebelumnya dihapus dari stack jadi penggun atidak bisa kembali ke halaman sebelumnya.  Dalam konteks apps saya navigator.push dipakai saat pengguna hanya mengunjungi sementara halaman baru misal pada tombol create product di itemcard kita mau buka halaman form untuk nambah produk (ProductFormPage) lalu setelah selesai menambah produk user bisa balk ke MyHomePage dengan menekan back. Disinilah Navigator.push cocok karena hanya sementara pindah halaman. Maka ini diletakkan di ItemCard dan LeftDrawer. Lalu untuk Navigator.pushReplacement dipakai saat halaman ga perlu diakses lagi, misal di LeftDrawer ketika user milih menu Home halaman sebelumnya tidak perlu disimpan lagi karena ketika kembali ke home ada alasan untuk kembali ke halaman form. Disini maka Push Replacement dipakai pada LeftDrawer di bagian menu Home. 
+
+ Bagaimana kamu memanfaatkan hierarchy widget seperti Scaffold, AppBar, dan Drawer untuk membangun struktur halaman yang konsisten di seluruh aplikasi?
+ Jawab :
+ Jadi disini Scaffold sebagai struktur dasar tiap page di aplikasi dan dia menyediakan area untuk elemen penting contoh AppBar di atas Drawer di kiri dan Body untuk isi utama halaman. Scaffold ini dipakai di tiap halaman sehingga tampilan aplikasi saya seragam dan gampang dipahami user. 
+
+ Lalu AppBar dipakai di bagian header tiap halaman yang fungsinya buat menampilkan judul halaman supaya user tau sedang dimana dan menyediakan aksi cepat misal tombol back search atau menu.
+
+ Selanjutnya Drawer diakai untuk menu navigasi global yang muncul di semua halaman. Dalam apps ini drawer didefine di widget terpisah (LeftDrawer) dan dipakai kembali di tiap halaman melalui Scaffold. 
+ contoh spt ini : drawer: const LeftDrawer(),
+
+
+
+ Dalam konteks desain antarmuka, apa kelebihan menggunakan layout widget seperti Padding, SingleChildScrollView, dan ListView saat menampilkan elemen-elemen form? Berikan contoh penggunaannya dari aplikasi kamu.
+ Padding ini menambah jarak atau ruang kosong sekitar widget supaya elemen ga saling berimpitan dan ini membuat antarmuka lebih teratur, nyaman dilihat dan mudah dipakai pengguna. Sehingga jarak antar komponen menjadi konsisten. Contoh penggunaannya seperti ini :
+ Padding(
+  padding: const EdgeInsets.all(8.0),
+  child: TextFormField(
+    decoration: InputDecoration(
+      hintText: "Nama Produk",
+      labelText: "Nama Produk",
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(5.0),
+      ),
+    ),
+  ),
+),
+tiap field pada ProductFormPage dibungkus Padding agar tidak menempel satu sama lain, menghasilkan tampilan form yang lebih rapi dan profesional.
+
+SingleChildScrollView ini memungkinkan semua konten di dalamnya bisa discroll meski hanya ada satu anak utama, disini dipakai untuk form panjang yang berisi banyak input dan menjamin semua elemen form dapat diisi tanpa terpotong meski layar perangkat kecil atau keyboard sedang aktif.
+Contoh implementasi:
+body: Form(
+  key: _formkey,
+  child: SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // berbagai field seperti Name, Price, Description, dll
+      ],
+    ),
+  ),
+),
+
+
+Listview dipakai buat menampilkan daftar elemen di satu kolom jadi ini cocok untuk menampilkan daftar produk atau menu. Pada LeftDrawer, ListView digunakan untuk menampilkan menu navigasi (Home, Tambah Produk, dll) agar bisa digulir bila jumlah item bertambah.
+drawer: Drawer(
+  child: ListView(
+    children: [
+      const DrawerHeader(...),
+      ListTile(
+        leading: const Icon(Icons.home_outlined),
+        title: const Text('Home'),
+        onTap: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyHomePage()),
+          );
+        },
+      ),
+      // dan menu lainnya...
+    ],
+  ),
+),
+
+
+ Bagaimana kamu menyesuaikan warna tema agar aplikasi Football Shop memiliki identitas visual yang konsisten dengan brand toko?
+ Jawab: Di file main.dart ini terdapat cara penentuan warna tema aplikasi melalui ThemeData seperti kode di bawah ini 
+ return MaterialApp(
+  title: 'Flutter Demo',
+  theme: ThemeData(
+    colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue)
+      .copyWith(secondary: Colors.blueAccent[400]),
+  ),
+  home: MyHomePage(),
+);
+
+disini terdapat primarySwatch: Colors.blue  untuk menetapkan warna utama aplikasi yang akan digunakan di AppBar, ikon utama, dan elemen penting lainnya.
+
+dan secondary: Colors.blueAccent[400] yaitu warna sekunder untuk aksen dan highlight, misalnya tombol aktif, switch, atau elemen interaktif.
+
+selain definisiin di ThemeData saya juga menerapkan warna yang konsisten di seluruh elemen UI ocontohnya di bawah ini :
+appBar: AppBar(
+  title: const Text(
+    'Kavza Football Shop',
+    style: TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  backgroundColor: Colors.deepPurple, // identitas visual kuat
+),
+
+Disini AppBar diberi warna ungu tua
+
+Selanjutnya drawer menggunakan warna biru supaya menyatu dengan warna utama apps, contoh potongan kodenya di bawah ini:
+const DrawerHeader(
+  decoration: BoxDecoration(
+    color: Colors.blue, // selaras dengan tema utama
+  ),
+  child: Column(
+    children: [
+      Text(
+        'Kavza Football Shop',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      Text("Kavza — Gear up like a Champion!",
+          style: TextStyle(color: Colors.white)),
+    ],
+  ),
+),
+
+
+Selanjutya tombol save memakai warna indigo  sehingga serasi dengan AppBar dan Drawer
+ElevatedButton(
+  style: ButtonStyle(
+    backgroundColor: MaterialStateProperty.all(Colors.indigo),
+  ),
+  onPressed: () { ... },
+  child: const Text("Save", style: TextStyle(color: Colors.white)),
+),
+
+
+
+ Melakukan add, commit, dan push ke GitHub.

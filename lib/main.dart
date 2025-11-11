@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kavza_footballshop/menu.dart';
+import 'package:kavza_footballshop/screens/menu.dart';
 
 void main() {
   runApp(const MyApp());
