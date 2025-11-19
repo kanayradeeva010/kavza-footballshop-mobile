@@ -225,13 +225,72 @@ ElevatedButton(
 ## Kanayra Maritza Sanika Adeeva
 ## PBP C - 2406437880
  - Jelaskan mengapa kita perlu membuat model Dart saat mengambil/mengirim data JSON? Apa konsekuensinya jika langsung memetakan Map<String, dynamic> tanpa model (terkait validasi tipe, null-safety, maintainability)?
+ Jawab:
+ Karena ketika bekerja dengan API, data yang diterima Flutter berupa:
+ Map<String, dynamic>. Kalau tidak dibuat model dart dan langsung pakai Map maka field bisa hilang dari JSON → aplikasi crash, ketika API berubah sedikit saja semua file Flutter yang akses Map harus diperbaiki manual, dapat menimbulkan kesalahan akses field, salah tipe data (string dianggap int), dan error baru muncul saat runtime. Dengan model dart, field & tipe dipastikan benar, mendukung null safety, dan lebih mudah digunakan. 
+
 
  - Apa fungsi package http dan CookieRequest dalam tugas ini? Jelaskan perbedaan peran http vs CookieRequest.
+ Jawab: 
+ http digunakan untuk GET POST PUT DELETE namun ia tdak menyimpan cookie, session, dan tidak dipakai untuk login django jadi ini cocok untuk request yang tanpa autentikasi (public API), sedangkan kalau cookie request digunakan untuk komunikasi dengan Django yang menggunakan session authentication karena ia otomatis menyimpan cookie session Django, mengirim cookie di setiap request, dan menyediakan fungsi siap pakai yaitu login(), logout(), get(), postJson()
 
  - Jelaskan mengapa instance CookieRequest perlu untuk dibagikan ke semua komponen di aplikasi Flutter.
+ Jawab : 
+ karena cookie request menyimpan session ID dari Django, informasi login pengguna, cookie autentikasi, dan status login (logged in / not). Jika komponen lain tak dapat instant yang sama maka satu halaman mengira user login, halaman lain tidak, request ke Django tidak membawa cookie dianggap user anonim, my Products tidak akan muncul, dan logout tidak bekerja. Ketika kita memakai provider itu dapat membuat satu instance CookieRequest yang shared untuk seluruh widget tree.
 
  - Jelaskan konfigurasi konektivitas yang diperlukan agar Flutter dapat berkomunikasi dengan Django. Mengapa kita perlu menambahkan 10.0.2.2 pada ALLOWED_HOSTS, mengaktifkan CORS dan pengaturan SameSite/cookie, dan menambahkan izin akses internet di Android? Apa yang akan terjadi jika konfigurasi tersebut tidak dilakukan dengan benar?
+ Jawab : 
+ - menaambahkan 10.0.2.2 ke ALLOWED_HOSTS di settings.py Django.karena emulator Android mengakses localhost komputer melalui 10.0.2.2.kalau dikosongkan, akan muncul error DisallowedHost. Ketika Flutter dijalankan pada Android emulator, alamat localhost milik Django tidak bisa diakses langsung. Emulator memiliki “localhost”-nya sendiri, jadi untuk mengakses host komputer, ia menggunakan IP khusus 10.0.2.2. Kalau itu tidak ditambahin, Django akan menolak request, dan muncul error DisallowedHost: Invalid HTTP_HOST header. 
+
+
+ - pasang django-cors-headers, tambahkan ke INSTALLED_APPS, dan CorsMiddleware ke MIDDLEWARE, serta menjadikan CORS_ALLOW_ALL_ORIGINS dan CORS_ALLOW_CREDENTIALS menjadi true karena ini memungkinkan aplikasi Flutter (yang berjalan di localhost/web/Android) untuk melakukan request ke server Django yang berbeda origin. Browser akan memblokir request semacam itu kecuali server Django mengizinkannya melalui django-cors-headers. Oleh karena itu dperlukan pengaturan
+ CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+kalau CORS tidak diaktifkan, browser akan memblokir request, terjadi Error: “Access to fetch has been blocked by CORS policy, dan flutter tidak bisa mengambil data JSON sama sekali.
+
+
+ - Melakukan cookie sesson settings untuk autentikasi agar cookie harus bisa diset cross-site (SameSite=None) dan secure kalau HTTPS.
+ CSRF_COOKIE_SECURE = True  
+SESSION_COOKIE_SECURE = True  
+CSRF_COOKIE_SAMESITE = 'None'  
+SESSION_COOKIE_SAMESITE = 'None'  
+Kalau pengaturan ini salah maka : Cookie session tidak dikirim ke Flutter yang mengakibatkan Login selalu gagal, request.loggedIn = false,“My Products” tidak bisa diambil karena Django menganggap user belum login, kita akan merasa login sukses, padahal server tidak pernah menyimpan sesi kita.
+
+
+- Memberi izin akses internet di android pada AndroidManifest.xml tanpa ini, aplikasi Android tidak bisa melakukan request HTTP -> request selalu gagal. Apps tidak boleh mengakses internet kecuali diizinkan secara eksplisit di android/app/src/main/AndroidManifest.xml, jika ini tidak ada akan membuat semua request HTTP dari Flutter akan error, tidak ada koneksi sama sekali, dan Error: “Failed host lookup” atau “SocketException: Connection failed”.
 
  - Jelaskan mekanisme pengiriman data mulai dari input hingga dapat ditampilkan pada Flutter.
+ Jawab: 
+ 1. User memasukan data produk meklalui TextFormField, dropdown, dan switch di Flutter, setelah tombol save ditekan Flutter mengumpulkan semua data dalam bentuk objek Map lalu mengubahnya menjadi JSON. Setelah itu,  Flutter menggunakan CookieRequest.postJson() untuk mengirim data ke Django (HTTP POST) dan Django menerima data dalam bentuk raw JSON body. Lalu, di Django, view create_product_flutter() menerima request POST dan kemudian Django Mengambil setiap field dari JSON, Membersihkan input HTML (strip_tags), Mengambil user dari session yang dikirim CookieRequest, Membuat objek Product baru, dan Menyimpan ke database. Setelah data disimpan, Django akan membalas return JsonResponse({"status": "success"}, status=200) dan jika gagal Django akan mengirim JSON error {"status": "error"}. Lalu flutter membaca response 
+ if (response['status'] == 'success') {
+  ScaffoldMessenger.of(context)
+      .showSnackBar(const SnackBar(
+          content: Text("Products successfully saved!")));
+}
+Untuk menampilkan data pada halaman list, Flutter melakukan GET request ke endpoint /json/ untuk semua produk dan /json/my-products/ untuk produk milik user. Mengubah tiap JSON menjadi object Dart ProductEntry, dan Menampilkan pada UI menggunakan ListView.builder + ProductEntryCard
+
 
  - Jelaskan mekanisme autentikasi dari login, register, hingga logout. Mulai dari input data akun pada Flutter ke Django hingga selesainya proses autentikasi oleh Django dan tampilnya menu pada Flutter.
+ Jawab:
+ - Pada regster, Flutter menerima input pengguna ketika user memasukkan username password 1 dan password 2 Flutter mengirim data ini ke Django dalam format JSON. Lalu, Django menerima data dan memprosesnya Django melakukan validasi password sama, validasi username tidak duplikat,membuat user baru dengan User.objects.create_user(). Jika semua valid → Django balas 
+ return JsonResponse({
+    "status": "success",
+    "message": "User created successfully!"
+}). Lalu Jika sukses → Flutter menampilkan SnackBar dan redirect ke halaman login.
+
+- Flutter mengirim username & password ke Django saat user menekan tombol Login
+final response = await request.login(
+  "http://localhost:8000/auth/login/",
+  {
+    "username": username,
+    "password": password,
+  },
+);
+CookieRequest.login() akan mengirim form-data, bukan JSON dan otomatis menyimpan session cookie jika login sukses. Lalu Django memvalidasi akun jika cocok Django memanggil login(request, user), Django membuat session ID, Session ID dikirim ke Flutter lewat response. Setelah itu, pbp_django_auth akan otomatis menyimpan session cookie, menandai user sebagai loggedIn, menyertakan cookie pada semua request berikutnya. Tanpa cookie ini, Django akan menganggap user sebagai anonim. Lalu, Flutter redirect ke Home/Menu Jika response['status'] == true, User berhasil masuk aplikasi dan dapat mengakses fitur yang memerlukan login.
+
+- Setelah itu selesai, Flutter memanggil endpoint logout Django
+final response = await request.logout(
+  "http://localhost:8000/auth/logout/",
+);. Lalu Django menghapus session di server, Django memutus session sehingga cookie tidak lagi valid dan Flutter menghapus cookie di local memory. Selanjutnya Flutter redirect ke halaman login Ini memastikan user tidak bisa kembali ke halaman sebelumnya menggunakan tombol back.
+
+

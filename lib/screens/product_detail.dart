@@ -6,123 +6,105 @@ class ProductDetailPage extends StatelessWidget {
 
   const ProductDetailPage({super.key, required this.product});
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Products Detail'),
+        title: const Text('Product Detail'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
+
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail image
-            if (product.thumbnail.isNotEmpty)
-              Image.network(
-                'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(product.thumbnail)}',
-                width: double.infinity,
-                height: 250,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 250,
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.broken_image, size: 50),
-                  ),
-                ),
-              ),
-            
+            Image.network(
+              'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(product.thumbnail)}',
+              width: double.infinity,
+              height: 250,
+              fit: BoxFit.cover,
+            ),
+
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Featured badge
+
                   if (product.isFeatured)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0, vertical: 6.0),
-                      margin: const EdgeInsets.only(bottom: 12.0),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.amber,
-                        borderRadius: BorderRadius.circular(20.0),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Featured',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
+                      child: const Text("FEATURED", style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
 
-                  // Title
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                   const SizedBox(height: 12),
 
-                  // Category and Date
+                  Text(product.name,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      )),
+
+                  const SizedBox(height: 10),
+
+                  Text("Price: Rp ${product.price}",
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      )),
+
+                  const SizedBox(height: 10),
+
+                  Text("Category: ${product.category}",
+                      style: const TextStyle(fontSize: 16)),
+
+                  const SizedBox(height: 10),
+
+                  Text("Stock: ${product.productStock}",
+                      style: const TextStyle(fontSize: 16)),
+
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10.0, vertical: 4.0),
-                        decoration: BoxDecoration(
-                          color: Colors.indigo.shade100,
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: Text(
-                          product.category.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo.shade700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
+                      const Icon(Icons.visibility, size: 16),
+                      const SizedBox(width: 4),
+                      Text("${product.productViews} views"),
                     ],
                   ),
+
+                  const Divider(height: 30),
+
+                  const Text("Description:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      )),
+
                   const SizedBox(height: 8),
 
-                  // Views count
-                  Row(
-                    children: [
-                      Icon(Icons.visibility, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${product.productViews} views',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const Divider(height: 32),
-
-                  // Full description
                   Text(
                     product.description,
-                    style: const TextStyle(
-                      fontSize: 16.0,
-                      height: 1.6,
-                    ),
-                    textAlign: TextAlign.justify,
+                    style: const TextStyle(fontSize: 16, height: 1.5),
                   ),
-                  const SizedBox(height: 24),
+
+                  const SizedBox(height: 20),
+
+                  Text("Product ID: ${product.id}", style: const TextStyle(color: Colors.grey)),
+                  
                 ],
               ),
             ),
+
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Back to List"),
+            ),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),

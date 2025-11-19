@@ -120,14 +120,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
                       // If you using chrome,  use URL http://localhost:8000       
                       final response = await request.postJson(
-                          "https://pbp.cs.ui.ac.id/web/project/kanayra.maritza/kavza/auth/register/",
+                          "http://localhost:8000/auth/register/",
                           jsonEncode({
                             "username": username,
                             "password1": password1,
                             "password2": password2,
                           }));
                       if (context.mounted) {
-                        if (response['status'] == 'success') {
+                        if (response['success'] == true) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Successfully registered!'),

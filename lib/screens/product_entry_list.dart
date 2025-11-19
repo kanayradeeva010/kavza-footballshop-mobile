@@ -7,7 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 
 class ProductEntryListPage extends StatefulWidget {
-  const ProductEntryListPage({super.key});
+  final bool isMyProducts;
+
+  const ProductEntryListPage({super.key, this.isMyProducts = false});
 
   @override
   State<ProductEntryListPage> createState() => _ProductEntryListPageState();
@@ -15,18 +17,14 @@ class ProductEntryListPage extends StatefulWidget {
 
 class _ProductEntryListPageState extends State<ProductEntryListPage> {
   Future<List<ProductEntry>> fetchProduct(CookieRequest request) async {
-    // TODO: Replace the URL with your app's URL and don't forget to add a trailing slash (/)!
-    // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
-    // If you using chrome,  use URL http://localhost:8000
-    
-    final response = await request.get('http://localhost:8000/json/');
-    
-    // Decode response to json format
-    var data = response;
-    
-    // Convert json data to ProductEntry objects
+    final url = widget.isMyProducts
+        ? 'http://localhost:8000/json/my-products/'
+        : 'http://localhost:8000/json/';
+
+    final response = await request.get(url);
+
     List<ProductEntry> listProduct = [];
-    for (var d in data) {
+    for (var d in response) {
       if (d != null) {
         listProduct.add(ProductEntry.fromJson(d));
       }
@@ -37,54 +35,68 @@ class _ProductEntryListPageState extends State<ProductEntryListPage> {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product Entry List'),
+        title: Text(widget.isMyProducts ? 'My Products' : 'All Products'),
       ),
       drawer: const LeftDrawer(),
       body: FutureBuilder(
         future: fetchProduct(request),
         builder: (context, AsyncSnapshot snapshot) {
-          if (snapshot.data == null) {
+          // ⏳ LOADING
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else {
-            if (!snapshot.hasData) {
-              return const Column(
-                children: [
-                  Text(
-                    'There are no product in football products yet.',
-                    style: TextStyle(fontSize: 20, color: Color(0xff59A5D8)),
-                  ),
-                  SizedBox(height: 8),
-                ],
-              );
-            } else {
-              return ListView.builder(
-                itemCount: snapshot.data!.length,
-                itemBuilder: (_, index) => ProductEntryCard(
-                  product: snapshot.data![index],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProductDetailPage(
-                          product: snapshot.data![index],
-                        ),
-                      ),
-                    );
-                    // Show a snackbar when product card is clicked
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        SnackBar(
-                          content: Text("You clicked on ${snapshot.data![index].name}"),
-                        ),
-                      );
-                  },
-                ),
-              );
-            }
           }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                "Error: ${snapshot.error}",
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+
+          // 🔍 DATA KOSONG
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                'There are no products yet.',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Color(0xff59A5D8),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (_, index) => ProductEntryCard(
+              product: snapshot.data![index],
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductDetailPage(
+                      product: snapshot.data![index],
+                    ),
+                  ),
+                );
+
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(
+                      content:
+                          Text("You clicked ${snapshot.data![index].name}"),
+                    ),
+                  );
+              },
+            ),
+          );
         },
       ),
     );

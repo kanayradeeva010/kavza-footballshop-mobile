@@ -47,6 +47,13 @@ class ItemCard extends StatelessWidget {
                       builder: (context) => const ProductEntryListPage()
                   ),
               );
+            } else if(item.name == "My Products"){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProductEntryListPage(isMyProducts: true),
+                ),
+              );
             } else if(item.name == "Logout"){
               final response = await request.logout(
                   "http://localhost:8000/auth/logout/");

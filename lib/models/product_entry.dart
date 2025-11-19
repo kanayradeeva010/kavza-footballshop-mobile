@@ -18,7 +18,7 @@ class ProductEntry {
     int productStock;
     int productViews;
     bool isFeatured;
-    int userId;
+    int? userId;
 
     ProductEntry({
         required this.id,
@@ -30,21 +30,22 @@ class ProductEntry {
         required this.productStock,
         required this.productViews,
         required this.isFeatured,
-        required this.userId,
+        this.userId,
     });
 
+    
     factory ProductEntry.fromJson(Map<String, dynamic> json) => ProductEntry(
-        id: json["id"],
-        name: json["name"],
-        price: json["price"],
-        description: json["description"],
-        category: json["category"],
-        thumbnail: json["thumbnail"],
-        productStock: json["product_stock"],
-        productViews: json["product_views"],
-        isFeatured: json["is_featured"],
-        userId: json["user_id"],
-    );
+        id: json["id"] ?? "",
+        name: json["name"] ?? "",
+        price: json["price"] ?? 0,
+        description: json["description"] ?? "",
+        category: json["category"] ?? "",
+        thumbnail: json["thumbnail"] ?? "",          
+        productStock: json["product_stock"] ?? 0,
+        productViews: json["product_views"] ?? 0,
+        isFeatured: json["is_featured"] ?? false,
+        userId: json["user_id"],                    
+      );
 
     Map<String, dynamic> toJson() => {
         "id": id,
